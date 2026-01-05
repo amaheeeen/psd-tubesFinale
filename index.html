@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EBT Market Analytics Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- 1. CSS VARIABLES & THEME --- */
+        :root {
+            --bg-dark: #0f172a;       /* Slate 900 */
+            --bg-card: #1e293b;       /* Slate 800 */
+            --bg-glass: rgba(30, 41, 59, 0.7);
+            
+            --accent-blue: #38bdf8;   /* Sky 400 */
+            --accent-green: #4ade80;  /* Green 400 */
+            --accent-red: #f87171;    /* Red 400 */
+            --accent-purple: #818cf8; /* Indigo 400 */
+            
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            
+            --border-line: rgba(255, 255, 255, 0.1);
+            --glow: 0 0 20px rgba(56, 189, 248, 0.15);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.1) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(129, 140, 248, 0.1) 0px, transparent 50%);
+        }
+
+        /* --- 2. LAYOUT CONTAINER --- */
+        .dashboard-wrapper {
+            width: 95%;
+            max-width: 1400px;
+            height: 92vh;
+            background: var(--bg-glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-line);
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- 3. HEADER --- */
+        header {
+            padding: 20px 30px;
+            border-bottom: 1px solid var(--border-line);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand h1 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--accent-blue);
+            text-transform: uppercase;
+        }
+        
+        .brand span { color: var(--text-secondary); font-weight: 400; font-size: 0.9rem; margin-left: 10px; }
+
+        .status-badge {
+            background: rgba(74, 222, 128, 0.1);
+            color: var(--accent-green);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: 1px solid rgba(74, 222, 128, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .status-dot { width: 6px; height: 6px; background: var(--accent-green); border-radius: 50%; box-shadow: 0 0 8px var(--accent-green); }
+
+        /* --- 4. SLIDE CONTENT --- */
+        main {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            padding: 40px;
+            opacity: 0;
+            transform: scale(0.98) translateY(10px);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .slide.active { opacity: 1; transform: scale(1) translateY(0); pointer-events: all; }
+
+        /* Typography */
+        h2 { font-size: 2.5rem; background: linear-gradient(to right, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 30px; line-height: 1.1; }
+        h3 { font-size: 1.2rem; color: var(--accent-blue); margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+        h3::before { content: '//'; color: var(--text-secondary); opacity: 0.5; }
+        p, li { font-size: 1.05rem; line-height: 1.7; color: var(--text-secondary); max-width: 800px; margin-bottom: 15px; }
+        
+        .highlight { color: var(--accent-blue); font-weight: 600; }
+        .danger { color: var(--accent-red); font-weight: 600; }
+
+        /* --- 5. IMAGE GRIDS & CONTAINERS --- */
+        /* Container Besar untuk Gambar Tunggal (Boxplot/Barchart) */
+        .single-graph-container {
+            width: 100%;
+            height: 500px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            border: 1px solid var(--border-line);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Container Grid untuk 5 Gambar (FFT/Anomali) */
+        .multi-graph-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr); /* 5 Kolom Sejajar */
+            gap: 15px;
+            margin-top: 20px;
+            width: 100%;
+            height: 350px;
+        }
+
+        .grid-item {
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--border-line);
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+            cursor: pointer;
+        }
+
+        .grid-item:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-blue);
+            box-shadow: var(--glow);
+        }
+
+        .grid-item h4 {
+            position: absolute;
+            top: 10px; left: 10px;
+            font-size: 0.8rem;
+            background: rgba(0,0,0,0.7);
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: #fff;
+            z-index: 2;
+        }
+
+        /* Image Styling General */
+        img.graph-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Agar grafik tidak terpotong */
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+        
+        .grid-item img.graph-img {
+            object-fit: cover; /* Thumbnail di crop agar rapi */
+        }
+
+        .grid-item:hover img.graph-img { opacity: 0.8; }
+
+        /* Placeholder jika gambar belum ada */
+        .placeholder {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100%; color: var(--text-secondary); text-align: center; padding: 20px;
+            font-size: 0.8rem; border: 2px dashed var(--border-line);
+        }
+
+        /* --- 6. LIGHTBOX (FULLSCREEN) --- */
+        #lightbox {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            z-index: 9999;
+            display: none; /* Hidden by default */
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        #lightbox.open { display: flex; opacity: 1; }
+
+        #lightbox img {
+            max-width: 90%;
+            max-height: 85%;
+            box-shadow: 0 0 50px rgba(56, 189, 248, 0.2);
+            border-radius: 8px;
+            border: 1px solid var(--border-line);
+        }
+
+        #lightbox-caption {
+            margin-top: 15px;
+            color: var(--text-primary);
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px; right: 30px;
+            font-size: 2rem; color: #fff;
+            cursor: pointer;
+            background: none; border: none;
+        }
+
+        /* --- 7. FOOTER & CONTROLS --- */
+        footer {
+            padding: 20px 30px;
+            border-top: 1px solid var(--border-line);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.5);
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: 1px solid var(--border-line);
+            color: var(--accent-blue);
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.8rem;
+        }
+
+        .nav-btn:hover {
+            background: var(--accent-blue);
+            color: var(--bg-dark);
+            box-shadow: var(--glow);
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 4px;
+            background: var(--border-line);
+            margin: 0 30px;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: var(--accent-blue);
+            width: 10%; /* JS will update this */
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px var(--accent-blue);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="lightbox" onclick="closeLightbox()">
+        <button class="close-btn">&times;</button>
+        <img id="lightbox-img" src="" alt="Fullscreen View">
+        <div id="lightbox-caption">Detail Grafik</div>
+        <div style="font-size: 0.8rem; color: #aaa; margin-top: 5px;">Klik di mana saja untuk menutup</div>
+    </div>
+
+    <div class="dashboard-wrapper">
+        <header>
+            <div class="brand">
+                <h1>IDX Analytics <span>// Renewable Energy Sector</span></h1>
+            </div>
+            <div class="status-badge">
+                <div class="status-dot"></div>
+                SYSTEM ONLINE
+            </div>
+        </header>
+
+        <main>
+            <div class="slide active">
+                <div style="margin-left: 5%;">
+                    <div style="color: var(--accent-blue); font-weight: 700; letter-spacing: 2px; margin-bottom: 20px;">STUDI KASUS 5</div>
+                    <h2 style="font-size: 4rem; max-width: 800px;">Analisis Volatilitas & Deteksi Anomali Saham EBT</h2>
+                    <p style="font-size: 1.2rem; margin-top: 20px;">
+                        Mengungkap risiko tersembunyi (*hidden risks*) dan pola pasar menggunakan 
+                        pendekatan Sains Data pada emiten Energi Baru Terbarukan.
+                    </p>
+                    <div style="margin-top: 50px; display: flex; gap: 40px;">
+                        <div>
+                            <div style="color: var(--text-secondary); font-size: 0.8rem;">105223021</div>
+                            <div style="color: var(--text-primary); font-weight: 600;">Muhammad Ali Akbar</div>
+                        </div>
+                        <div>
+                            <div style="color: var(--text-secondary); font-size: 0.8rem;">105223024</div>
+                            <div style="color: var(--text-primary); font-weight: 600;">Farhan Kholid</div>
+                        </div>
+                        <div>
+                            <div style="color: var(--text-secondary); font-size: 0.8rem;">105223033</div>
+                            <div style="color: var(--text-primary); font-weight: 600;">Fahmi Idris</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide">
+                <h2>1.0 Pendahuluan</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+                    <div style="background: rgba(255,255,255,0.03); padding: 30px; border-radius: 12px; border: 1px solid var(--border-line);">
+                        <h3>Latar Belakang</h3>
+                        <p>Transisi energi di Indonesia memicu lonjakan minat pada saham EBT. Namun, volatilitas tinggi seringkali mengaburkan fundamental. Investor membutuhkan metode kuantitatif untuk membedakan pertumbuhan organik vs manipulasi pasar.</p>
+                    </div>
+                    <div>
+                        <h3>Objektif Analisis</h3>
+                        <ul style="list-style: none;">
+                            <li style="margin-bottom: 20px; display: flex; align-items: flex-start; gap: 10px;">
+                                <span style="color: var(--accent-green);">▸</span>
+                                <div><strong>Akuisisi Data Valid:</strong> Mengambil data *Time Series* harian langsung dari server IDX (bukan PDF).</div>
+                            </li>
+                            <li style="margin-bottom: 20px; display: flex; align-items: flex-start; gap: 10px;">
+                                <span style="color: var(--accent-green);">▸</span>
+                                <div><strong>Deteksi Anomali:</strong> Mengidentifikasi "Data Burst" menggunakan statistik Z-Score.</div>
+                            </li>
+                            <li style="display: flex; align-items: flex-start; gap: 10px;">
+                                <span style="color: var(--accent-green);">▸</span>
+                                <div><strong>Analisis Pola:</strong> Menguji keberadaan siklus musiman dengan Transformasi Fourier (FFT).</div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide">
+                <h2>2.0 Metodologi (Data Science)</h2>
+                <p>Mengadaptasi *Best Practices* dari studi literatur Kaggle untuk memastikan ketajaman analisis.</p>
+                
+                <div style="margin-top: 40px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                    <div style="border-top: 3px solid var(--accent-blue); padding-top: 20px;">
+                        <h4 style="color: var(--text-primary); margin-bottom: 10px;">1. Preprocessing</h4>
+                        <p style="font-size: 0.9rem;">Interpolasi Linear untuk menangani data hari libur, memastikan kontinuitas *time-series* sebelum masuk ke model FFT.</p>
+                    </div>
+                    <div style="border-top: 3px solid var(--accent-purple); padding-top: 20px;">
+                        <h4 style="color: var(--text-primary); margin-bottom: 10px;">2. Z-Score Anomaly</h4>
+                        <p style="font-size: 0.9rem;">Threshold <strong>Z > 2.5</strong>. Menyaring fluktuasi normal untuk menemukan kejadian ekstrem (outlier).</p>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 5px;">Ref: Praxitelis K (Kaggle)</div>
+                    </div>
+                    <div style="border-top: 3px solid var(--accent-green); padding-top: 20px;">
+                        <h4 style="color: var(--text-primary); margin-bottom: 10px;">3. Spectral Analysis</h4>
+                        <p style="font-size: 0.9rem;">Mengubah domain waktu ke frekuensi (Hz) untuk memisahkan *Signal* (Pola) dari *Noise* (Acak).</p>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 5px;">Ref: Ian Olmstead (Kaggle)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide">
+                <h2>3.0 Emiten Terpilih</h2>
+                <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 20px;">
+                    <div style="background: var(--bg-card); padding: 20px; border-radius: 8px; border: 1px solid var(--border-line); flex: 1; min-width: 200px;">
+                        <div style="color: var(--accent-blue); font-weight: 700;">ARKO</div>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary);">Arkora Hydro</div>
+                        <div style="margin-top: 10px; font-size: 0.9rem;">Pure-play PLTA. Sangat sensitif isu lingkungan.</div>
+                    </div>
+                    <div style="background: var(--bg-card); padding: 20px; border-radius: 8px; border: 1px solid var(--border-line); flex: 1; min-width: 200px;">
+                        <div style="color: var(--accent-blue); font-weight: 700;">KEEN</div>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary);">Kencana Energi</div>
+                        <div style="margin-top: 10px; font-size: 0.9rem;">Hydro & Biomass. Likuiditas fluktuatif.</div>
+                    </div>
+                    <div style="background: var(--bg-card); padding: 20px; border-radius: 8px; border: 1px solid var(--border-line); flex: 1; min-width: 200px;">
+                        <div style="color: var(--accent-blue); font-weight: 700;">SLIS</div>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary);">Gaya Abadi Sempurna</div>
+                        <div style="margin-top: 10px; font-size: 0.9rem;">Sektor EV. Volatilitas sangat tinggi.</div>
+                    </div>
+                    <div style="background: var(--bg-card); padding: 20px; border-radius: 8px; border: 1px solid var(--border-line); flex: 1; min-width: 200px;">
+                        <div style="color: var(--accent-green); font-weight: 700;">POWR</div>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary);">Cikarang Listrindo</div>
+                        <div style="margin-top: 10px; font-size: 0.9rem;">Baseline Stabil. Transisi Gas-Solar.</div>
+                    </div>
+                    <div style="background: var(--bg-card); padding: 20px; border-radius: 8px; border: 1px solid var(--border-line); flex: 1; min-width: 200px;">
+                        <div style="color: var(--accent-purple); font-weight: 700;">OASA</div>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary);">Maharaksa Biru</div>
+                        <div style="margin-top: 10px; font-size: 0.9rem;">Pivot Bisnis. Data historis "noisy".</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide">
+                <h2>4.0 Distribusi Risiko (EDA)</h2>
+                <p>Boxplot Log-Return menunjukkan seberapa lebar rentang fluktuasi harga harian.</p>
+                
+                <div class="single-graph-container">
+                    <img src="boxplot_gabungan.png" class="graph-img" alt="Boxplot Distribusi" onclick="openLightbox(this, 'Distribusi Log Return Harian')">
+                    <div class="placeholder" style="display: none;">IMAGE NOT FOUND: boxplot_gabungan.png</div>
+                </div>
+                <p style="margin-top: 10px; font-size: 0.9rem;">
+                    <span class="highlight">Insight:</span> SLIS & ARKO memiliki "kumis" (whiskers) terpanjang dan outlier terbanyak, menandakan risiko harian tertinggi.
+                </p>
+            </div>
+
+            <div class="slide">
+                <h2>5.0 Analisis Siklus (FFT Spectrum)</h2>
+                <p>Menguji hipotesis: "Apakah ada pola mingguan/bulanan yang teratur?"</p>
+
+                <div class="multi-graph-grid">
+                    <div class="grid-item" onclick="openLightbox(this.querySelector('img'), 'FFT Spectrum: ARKO')">
+                        <h4>ARKO</h4>
+                        <img src="fft_ARKO.png" class="graph-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                        <div class="placeholder" style="display: none;">fft_ARKO.png</div>
+                    </div>
+                    <div class="grid-item" onclick="openLightbox(this.querySelector('img'), 'FFT Spectrum: KEEN')">
+                        <h4>KEEN</h4>
+                        <img src="fft_KEEN.png" class="graph-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                        <div class="placeholder" style="display: none;">fft_KEEN.png</div>
+                    </div>
+                    <div class="grid-item" onclick="openLightbox(this.querySelector('img'), 'FFT Spectrum: OASA')">
+                        <h4>OASA</h4>
+                        <img src="fft_OASA.png" class="graph-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                        <div class="placeholder" style="display: none;">fft_OASA.png</div>
+                    </div>
+                    <div class="grid-item" onclick="openLightbox(this.querySelector('img'), 'FFT Spectrum: POWR')">
+                        <h4>POWR</h4>
+                        <img src="fft_POWR.png" class="graph-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                        <div class="placeholder" style="display: none;">fft_POWR.png</div>
+                    </div>
+                    <div class="grid-item" onclick="openLightbox(this.querySelector('img'), 'FFT Spectrum: SLIS')">
+                        <h4>SLIS</h4>
+                        <img src="fft_SLIS.png" class="graph-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                        <div class="placeholder" style="display: none;">fft_SLIS.png</div>
+                    </div>
+                </div>
+                
+                <div style="background: rgba(56, 189, 248, 0.1); border-left: 4px solid var(--accent-blue); padding: 15px; margin-top: 15px;">
+                    <strong>Kesimpulan FFT:</strong> Grafik cenderung datar/acak. Ini mengonfirmasi bahwa pergerakan harga EBT saat ini bersifat <em>Random Walk</em> (digerakkan sentimen berita acak), bukan pola algoritmik yang tetap.
+                </div>
+            </div>
+
+            <div class="slide">
+                <h2>6.0 Deteksi Data Burst (Anomali)</h2>
+                <p>Visualisasi titik waktu (Merah) di mana harga bergerak ekstrem (Z > 2.5).</p>
+
+                <div class="multi-graph-grid">
+                    <div class="grid-item" onclick="openLightbox(this.querySelector('img'), 'Anomali Harga: ARKO')">
+                        <h4>ARKO</h4>
+                        <img src="anomali_ARKO.png" class="graph-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                         <div class="placeholder" style="display: none;">anomali_ARKO.png</div>
+                    </div>
+                    <div class="grid-item" onclick="openLightbox(this.querySelector('img'), 'Anomali Harga: KEEN')">
+                        <h4>KEEN</h4>
+                        <img src="anomali_KEEN.png" class="graph-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                        <div class="placeholder" style="display: none;">anomali_KEEN.png</div>
+                    </div>
+                    <div class="grid-item" onclick="openLightbox(this.querySelector('img'), 'Anomali Harga: OASA')">
+                        <h4>OASA</h4>
+                        <img src="anomali_OASA.png" class="graph-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                        <div class="placeholder" style="display: none;">anomali_OASA.png</div>
+                    </div>
+                    <div class="grid-item" onclick="openLightbox(this.querySelector('img'), 'Anomali Harga: POWR')">
+                        <h4>POWR</h4>
+                        <img src="anomali_POWR.png" class="graph-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                        <div class="placeholder" style="display: none;">anomali_POWR.png</div>
+                    </div>
+                    <div class="grid-item" onclick="openLightbox(this.querySelector('img'), 'Anomali Harga: SLIS')">
+                        <h4>SLIS</h4>
+                        <img src="anomali_SLIS.png" class="graph-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                        <div class="placeholder" style="display: none;">anomali_SLIS.png</div>
+                    </div>
+                </div>
+
+                <p style="margin-top: 15px; font-size: 0.9rem;">
+                    <span class="danger">Titik Merah</span> menandakan kejadian pasar luar biasa. Pada SLIS, anomali ini seringkali berkorelasi dengan rilis berita subsidi EV.
+                </p>
+            </div>
+
+            <div class="slide">
+                <h2>7.0 Kesimpulan: Profil Risiko</h2>
+                
+                <div style="display: flex; gap: 40px; align-items: center;">
+                    <div style="flex: 1;">
+                        <div class="single-graph-container" style="height: 350px; margin-top: 0;">
+                            <img src="barchart_risiko.png" class="graph-img" alt="Bar Chart Risiko" onclick="openLightbox(this, 'Perbandingan Jumlah Anomali')">
+                            <div class="placeholder" style="display: none;">IMAGE NOT FOUND: barchart_risiko.png</div>
+                        </div>
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="margin-bottom: 20px;">
+                            <h3 style="color: var(--accent-green);">Low Risk Profile</h3>
+                            <p><strong>POWR (19 Anomali):</strong> Paling stabil. Cocok untuk investor konservatif yang ingin eksposur ke transisi energi.</p>
+                        </div>
+                        <div>
+                            <h3 style="color: var(--accent-red);">High Risk Profile</h3>
+                            <p><strong>ARKO & SLIS (>30 Anomali):</strong> Volatilitas tinggi. Menawarkan peluang *high return* namun dengan risiko *capital loss* yang signifikan.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide">
+                <div style="text-align: center;">
+                    <h2 style="font-size: 3rem; margin-bottom: 20px;">Terima Kasih</h2>
+                    <p style="color: var(--accent-blue); font-size: 1.2rem;">Q & A SESSION</p>
+                </div>
+            </div>
+
+        </main>
+
+        <footer>
+            <button class="nav-btn" onclick="changeSlide(-1)">← Previous</button>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress"></div>
+            </div>
+            <button class="nav-btn" onclick="changeSlide(1)">Next Step →</button>
+        </footer>
+    </div>
+
+    <script>
+        // --- LOGIC ---
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        const progressBar = document.getElementById('progress');
+        
+        // Lightbox Logic
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightbox-img');
+        const lightboxCap = document.getElementById('lightbox-caption');
+
+        function updateSlide() {
+            slides.forEach((slide, index) => {
+                slide.classList.remove('active');
+                if (index === currentSlide) {
+                    slide.classList.add('active');
+                }
+            });
+            
+            // Update Progress Bar
+            const progressPercent = ((currentSlide + 1) / totalSlides) * 100;
+            progressBar.style.width = `${progressPercent}%`;
+        }
+
+        function changeSlide(direction) {
+            currentSlide += direction;
+            if (currentSlide < 0) currentSlide = 0;
+            if (currentSlide >= totalSlides) currentSlide = totalSlides - 1;
+            updateSlide();
+        }
+
+        // Keyboard Nav
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') changeSlide(1);
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'Escape') closeLightbox();
+        });
+
+        // Lightbox Functions
+        function openLightbox(imgElement, captionText) {
+            // Check if image source is valid (not placeholder)
+            if (imgElement.src && !imgElement.src.includes('null') && imgElement.style.display !== 'none') {
+                lightboxImg.src = imgElement.src;
+                lightboxCap.textContent = captionText || 'Detail Grafik';
+                lightbox.classList.add('open');
+            }
+        }
+
+        function closeLightbox() {
+            lightbox.classList.remove('open');
+        }
+
+        // Initialize
+        updateSlide();
+    </script>
+</body>
+</html>
