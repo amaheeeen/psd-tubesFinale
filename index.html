@@ -1,477 +1,1116 @@
 <!DOCTYPE html>
 <html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EBT Quantitative Analysis</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Studi Kasus EBT: Analisis Kuantitatif</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
     <style>
-        /* --- THEME CONFIGURATION --- */
-        :root {
-            --bg-core: #0b0c10;
-            --bg-panel: #1f2833;
-            --neon-cyan: #66fcf1;
-            --neon-green: #45a29e;
-            --alert-red: #ff3860;
-            --text-main: #c5c6c7;
-            --text-white: #ffffff;
-            --grid-line: rgba(102, 252, 241, 0.1);
-        }
+      /* --- 1. DESIGN SYSTEM --- */
+      :root {
+        --bg-body: #e8e8e8;
+        --bg-slide: #ffffff;
+        --text-primary: #1a1a1a;
+        --text-secondary: #4a4a4a;
+        --text-muted: #888888;
+        --accent-blue: #0056b3;
+        --accent-red: #d32f2f;
+        --accent-green: #2e7d32;
+        --border-light: #e0e0e0;
+        --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.06);
+      }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-core);
-            color: var(--text-main);
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            background-image: linear-gradient(var(--bg-core) 50%, rgba(11, 12, 16, 0.8)), 
-                              url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
-        }
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: var(--bg-body);
+        color: var(--text-primary);
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+      }
 
-        /* --- DASHBOARD FRAME --- */
-        .main-interface {
-            width: 96%;
-            max-width: 1600px;
-            height: 94vh;
-            background: var(--bg-panel);
-            border: 1px solid var(--neon-cyan);
-            box-shadow: 0 0 30px rgba(102, 252, 241, 0.15);
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
+      /* --- 2. DECK CONTAINER --- */
+      .deck-container {
+        width: 96%;
+        max-width: 1700px;
+        height: 94vh;
+        background: var(--bg-slide);
+        border-radius: 12px;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        position: relative;
+      }
 
-        /* --- HEADER (HUD) --- */
-        header {
-            padding: 15px 30px;
-            border-bottom: 1px solid var(--grid-line);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(11, 12, 16, 0.9);
-        }
+      /* --- 3. HEADER & FOOTER --- */
+      header {
+        padding: 0 50px;
+        height: 70px;
+        border-bottom: 1px solid var(--border-light);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.98);
+        z-index: 20;
+      }
 
-        .sys-title { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--neon-cyan); letter-spacing: 2px; }
-        .sys-meta { font-size: 0.8rem; display: flex; gap: 20px; font-family: 'JetBrains Mono', monospace; }
-        .blink { animation: blinker 2s linear infinite; color: var(--alert-red); }
-        @keyframes blinker { 50% { opacity: 0; } }
+      .brand {
+        font-family: "JetBrains Mono", monospace;
+        font-weight: 800;
+        font-size: 1rem;
+        letter-spacing: -0.5px;
+      }
+      .tag {
+        background: #f0f0f0;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        font-family: "JetBrains Mono";
+      }
 
-        /* --- CONTENT AREA --- */
-        #viewport {
-            flex: 1;
-            position: relative;
-            overflow: hidden;
-            background: 
-                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px) 0 0 / 40px 40px,
-                linear-gradient(var(--grid-line) 1px, transparent 1px) 0 0 / 40px 40px;
-        }
+      footer {
+        padding: 0 50px;
+        height: 70px;
+        border-top: 1px solid var(--border-light);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #fafafa;
+        z-index: 20;
+      }
 
-        .slide {
-            position: absolute;
-            inset: 0;
-            padding: 40px 60px;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.4s ease-out;
-            pointer-events: none;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            background: rgba(31, 40, 51, 0.9); /* Overlay agar text terbaca di atas grid */
-        }
+      /* --- 4. SLIDES: VERTICAL TRANSITION --- */
+      .viewport {
+        flex: 1;
+        position: relative;
+        overflow: hidden;
+      }
 
-        .slide.active { opacity: 1; transform: translateY(0); pointer-events: all; }
+      .slide {
+        position: absolute;
+        inset: 0;
+        padding: 40px 80px;
+        opacity: 0;
+        /* Default state: Berada di bawah (seolah akan naik) */
+        transform: translateY(100px);
+        pointer-events: none;
+        transition: all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+        background: var(--bg-slide);
 
-        /* --- TYPOGRAPHY FOR "DAGING" CONTENT --- */
-        h1 { font-size: 3.5rem; color: var(--text-white); font-weight: 800; margin-bottom: 10px; line-height: 1.1; }
-        h2 { font-size: 2.2rem; color: var(--neon-cyan); margin-bottom: 30px; border-left: 5px solid var(--neon-green); padding-left: 20px; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; }
-        h3 { font-size: 1.3rem; color: var(--text-white); margin-top: 20px; margin-bottom: 10px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
-        
-        p { font-size: 1.1rem; line-height: 1.6; margin-bottom: 15px; max-width: 900px; text-align: justify; }
-        
-        .code-block {
-            font-family: 'JetBrains Mono', monospace;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid var(--grid-line);
-            padding: 15px;
-            border-radius: 5px;
-            color: var(--neon-green);
-            font-size: 0.9rem;
-            margin: 10px 0;
-            display: inline-block;
-        }
+        /* Centering */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        overflow-y: auto;
+      }
 
-        .stat-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-            margin-top: 30px;
-        }
+      .slide.active {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: all;
+        z-index: 10;
+      }
 
-        .stat-card {
-            background: rgba(11, 12, 16, 0.6);
-            border: 1px solid var(--grid-line);
-            padding: 20px;
-        }
-        .stat-val { font-size: 2rem; font-weight: 800; color: var(--text-white); font-family: 'JetBrains Mono'; }
-        .stat-label { font-size: 0.8rem; color: var(--neon-green); text-transform: uppercase; letter-spacing: 1px; }
+      /* Typography */
+      h1 {
+        font-size: 3.2rem;
+        font-weight: 800;
+        line-height: 1.1;
+        letter-spacing: -1px;
+        margin-bottom: 25px;
+        color: var(--text-primary);
+      }
+      h2 {
+        font-size: 2.4rem;
+        font-weight: 700;
+        margin-bottom: 30px;
+        color: var(--text-primary);
+        position: relative;
+        display: inline-block;
+      }
+      h2::after {
+        content: "";
+        display: block;
+        width: 50px;
+        height: 5px;
+        background: var(--accent-blue);
+        margin: 12px auto 0 auto;
+        border-radius: 3px;
+      }
+      h3 {
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin-bottom: 12px;
+        color: var(--text-primary);
+      }
+      p {
+        font-size: 1.15rem;
+        line-height: 1.6;
+        color: var(--text-secondary);
+        margin-bottom: 20px;
+        max-width: 1100px;
+      }
 
-        /* --- GRAPHICS --- */
-        .graph-wrapper {
-            background: rgba(0,0,0,0.4);
-            border: 1px solid var(--grid-line);
-            padding: 10px;
-            height: 400px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-        
-        .graph-wrapper img { max-height: 100%; max-width: 100%; cursor: zoom-in; }
+      /* --- 5. LAYOUTS --- */
+      .split-layout {
+        display: flex;
+        width: 100%;
+        max-width: 1400px;
+        gap: 60px;
+        align-items: center;
+        text-align: left;
+      }
+      .split-half {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .grid-cards {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 25px;
+        width: 100%;
+        max-width: 1300px;
+        text-align: left;
+      }
+      .grid-emiten {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 15px;
+        width: 100%;
+        max-width: 1500px;
+        text-align: left;
+        margin-top: 20px;
+      }
 
-        .multi-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
-            margin-top: 20px;
-        }
-        
-        .mini-card {
-            border: 1px solid var(--grid-line);
-            background: rgba(0,0,0,0.5);
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        .mini-card:hover { transform: scale(1.05); border-color: var(--neon-cyan); }
-        .mini-card img { width: 100%; height: 150px; object-fit: cover; }
-        .mini-label { text-align: center; font-family: 'JetBrains Mono'; font-size: 0.8rem; padding: 5px; background: var(--bg-core); }
+      /* --- 6. COMPONENTS --- */
+      .info-card {
+        background: #fafafa;
+        border: 1px solid var(--border-light);
+        padding: 25px;
+        border-radius: 10px;
+        transition: transform 0.3s;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        height: 100%;
+      }
+      .info-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--accent-blue);
+        background: #fff;
+        box-shadow: var(--shadow-card);
+      }
+      .info-card strong {
+        display: block;
+        font-size: 1.05rem;
+        margin-bottom: 8px;
+        color: var(--accent-blue);
+        font-family: "JetBrains Mono";
+      }
+      .info-card span {
+        font-size: 0.95rem;
+        color: var(--text-secondary);
+        line-height: 1.5;
+      }
 
-        /* --- LIGHTBOX --- */
-        #lightbox {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 999;
-            display: none; flex-direction: column; justify-content: center; align-items: center;
-        }
-        #lightbox.active { display: flex; }
-        #lightbox img { max-width: 90%; max-height: 85vh; border: 2px solid var(--neon-cyan); box-shadow: 0 0 50px rgba(102, 252, 241, 0.2); }
-        .close-lb { position: absolute; top: 20px; right: 30px; font-size: 2rem; color: white; cursor: pointer; }
+      .emiten-card {
+        background: white;
+        border: 1px solid var(--border-light);
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+        transition: 0.3s;
+      }
+      .emiten-card:hover {
+        border-color: var(--accent-blue);
+        transform: scale(1.03);
+        box-shadow: var(--shadow-card);
+      }
+      .ticker {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--accent-blue);
+        font-family: "JetBrains Mono";
+        margin-bottom: 5px;
+      }
+      .company-name {
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 10px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .sector-badge {
+        background: #f0f0f0;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+      }
 
-        /* --- FOOTER NAV --- */
-        footer {
-            padding: 15px 30px;
-            border-top: 1px solid var(--grid-line);
-            display: flex;
-            justify-content: space-between;
-            background: var(--bg-panel);
-            font-family: 'JetBrains Mono', monospace;
-        }
-        
-        .nav-btn {
-            background: transparent; border: 1px solid var(--neon-cyan); color: var(--neon-cyan);
-            padding: 8px 20px; cursor: pointer; transition: 0.3s;
-        }
-        .nav-btn:hover { background: var(--neon-cyan); color: var(--bg-core); }
+      .formula-box {
+        background: #f4f4f4;
+        padding: 15px 30px;
+        border-radius: 8px;
+        font-family: "Times New Roman", serif;
+        font-size: 1.8rem;
+        font-style: italic;
+        display: inline-block;
+        margin: 20px 0;
+        border-left: 5px solid var(--accent-blue);
+      }
 
-        /* --- UTILS --- */
-        .text-alert { color: var(--alert-red); }
-        .text-safe { color: var(--neon-green); }
-        
-        .formula {
-            font-style: italic;
-            font-family: 'Times New Roman', serif;
-            font-size: 1.4rem; /* Diperbesar sedikit agar jelas */
-            color: #fff;
-            background: rgba(255,255,255,0.05);
-            padding: 10px 25px;
-            border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
+      /* --- 7. CAROUSEL --- */
+      .carousel-container {
+        width: 100%;
+        max-width: 1400px;
+        height: 550px;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid var(--border-light);
+        border-radius: 12px;
+        background: #fafafa;
+        box-shadow: var(--shadow-card);
+      }
+      .carousel-track {
+        display: flex;
+        height: 100%;
+        transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+      }
+      .carousel-item {
+        min-width: 100%;
+        height: 100%;
+        display: flex;
+        padding: 40px;
+        box-sizing: border-box;
+      }
+      .c-split {
+        display: flex;
+        width: 100%;
+        height: 100%;
+        align-items: center;
+        gap: 40px;
+        text-align: left;
+      }
+      .c-img {
+        flex: 1.2;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: white;
+        border: 1px solid #eee;
+        border-radius: 8px;
+        padding: 15px;
+      }
+      .c-img img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        cursor: zoom-in;
+      }
+      .c-text {
+        flex: 1;
+        padding-right: 10px;
+        overflow-y: auto;
+      }
+      .c-nav {
+        position: absolute;
+        top: 50%;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        padding: 0 20px;
+        pointer-events: none;
+        transform: translateY(-50%);
+      }
+      .c-btn {
+        pointer-events: all;
+        width: 45px;
+        height: 45px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        font-size: 1.5rem;
+        transition: 0.2s;
+        border: 1px solid #eee;
+      }
+      .c-btn:hover {
+        background: var(--accent-blue);
+        color: white;
+      }
 
+      /* --- 8. UTILS --- */
+      .nav-btn {
+        background: white;
+        border: 1px solid #ccc;
+        padding: 10px 20px;
+        font-size: 0.9rem;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: 0.2s;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .nav-btn:hover {
+        border-color: #333;
+        background: #333;
+        color: white;
+      }
+
+      #lightbox {
+        position: fixed;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.98);
+        z-index: 999;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+      }
+      #lightbox.active {
+        display: flex;
+      }
+      #lightbox img {
+        max-width: 90%;
+        max-height: 85vh;
+        border: 1px solid #eee;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+      }
+      .close-lb {
+        position: absolute;
+        top: 30px;
+        right: 40px;
+        font-size: 2.5rem;
+        cursor: pointer;
+      }
     </style>
-</head>
-<body>
-
+  </head>
+  <body>
     <div id="lightbox" onclick="this.classList.remove('active')">
-        <div class="close-lb">&times;</div>
-        <img id="lb-img" src="">
-        <div id="lb-cap" style="color:white; margin-top:10px; font-family:'JetBrains Mono'"></div>
+      <div class="close-lb">&times;</div>
+      <img id="lb-img" src="" />
+      <div
+        id="lb-cap"
+        style="margin-top: 20px; font-size: 1.2rem; font-weight: 600"
+      ></div>
     </div>
 
-    <div class="main-interface">
-        <header>
-            <div class="sys-title">> IDX_QUANT_ANALYTICS_V5.0</div>
-            <div class="sys-meta">
-                <div>TARGET: RENEWABLE_ENERGY</div>
-                <div>METHOD: Z-SCORE / FFT</div>
-                <div class="blink">● LIVE SESSION</div>
+    <div class="deck-container">
+      <header>
+        <div class="brand">DS_GROUP_05 // EQUITY_RESEARCH</div>
+        <div class="tag">DATA: JUL 2022 - JAN 2026</div>
+      </header>
+
+      <div class="viewport">
+        <div class="slide active">
+          <div
+            style="
+              margin-bottom: 20px;
+              font-family: 'JetBrains Mono';
+              color: var(--accent-blue);
+              font-weight: 700;
+              font-size: 1.1rem;
+              letter-spacing: 2px;
+            "
+          >
+            STUDI KASUS SAINS DATA
+          </div>
+          <h1>Analisis Volatilitas &<br />Deteksi Anomali Saham</h1>
+          <p style="font-size: 1.3rem; margin-top: 10px">
+            Investigasi Forensik pada Sektor Energi Terbarukan (EBT)
+          </p>
+
+          <div
+            style="margin-top: 50px; display: flex; gap: 50px; text-align: left"
+          >
+            <div>
+              <div style="font-size: 0.85rem; color: var(--text-muted)">
+                ANALYST
+              </div>
+              <div style="font-weight: 700; font-size: 1rem">
+                Muhammad Ali Akbar
+              </div>
+              <div
+                style="
+                  font-family: 'JetBrains Mono';
+                  color: var(--text-secondary);
+                  font-size: 0.9rem;
+                "
+              >
+                105223021
+              </div>
             </div>
-        </header>
-
-        <div id="viewport">
-            
-            <div class="slide active">
-                <div style="border-left: 1px solid var(--neon-cyan); padding-left: 40px;">
-                    <h2 style="border:none; padding:0; font-size: 1.5rem; color: var(--text-main);">STUDI KASUS SAINS DATA</h2>
-                    <h1>ANALISIS KUANTITATIF &<br><span style="color: var(--neon-cyan);">DETEKSI ANOMALI PASAR</span></h1>
-                    <p style="margin-top: 20px; font-size: 1.3rem;">
-                        Investigasi Forensik pada Volatilitas Saham Sektor Energi Terbarukan (EBT) menggunakan Pendekatan Statistik Time Series.
-                    </p>
-                    
-                    <div style="margin-top: 60px; display: flex; gap: 50px;">
-                        <div>
-                            <div class="code-block">Muhammad Ali Akbar</div>
-                            <div style="font-weight: 700;">105223021</div>
-                        </div>
-                        <div>
-                            <div class="code-block">Farhan Kholid</div>
-                            <div style="font-weight: 700;">105223024</div>
-                        </div>
-                        <div>
-                            <div class="code-block">Fahmi Idris</div>
-                            <div style="font-weight: 700;">105223033</div>
-                        </div>
-                    </div>
-                </div>
+            <div>
+              <div style="font-size: 0.85rem; color: var(--text-muted)">
+                ANALYST
+              </div>
+              <div style="font-weight: 700; font-size: 1rem">Farhan Kholid</div>
+              <div
+                style="
+                  font-family: 'JetBrains Mono';
+                  color: var(--text-secondary);
+                  font-size: 0.9rem;
+                "
+              >
+                105223024
+              </div>
             </div>
-
-            <div class="slide">
-                <h2>1.0 Executive Summary</h2>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 50px;">
-                    <div>
-                        <h3>Masalah: Asimetri Informasi</h3>
-                        <p>Investor ritel sering terjebak dalam euforia "Green Energy". Laporan keuangan statis (PDF) gagal menangkap risiko mikro-struktur pasar yang terjadi secara harian (<em>intraday/daily volatility</em>).</p>
-                        
-                        <h3 style="margin-top:30px;">Solusi Sains Data</h3>
-                        <p>Kami membangun pipeline otomatis yang tidak hanya mengambil data, tetapi melakukan <strong>Audit Kualitas Harga</strong>. Kami menggeser paradigma dari "Membaca Berita" menjadi "Membaca Pola Data".</p>
-                    </div>
-                    <div>
-                        <div class="stat-card">
-                            <div class="stat-label">SCOPE ANALISIS</div>
-                            <div style="margin-top:10px;">
-                                <ul style="list-style: none;">
-                                    <li style="margin-bottom:10px;">✅ <strong>5 Emiten</strong> (Mid-Cap & Transisi)</li>
-                                    <li style="margin-bottom:10px;">✅ <strong>2 Tahun</strong> Data Historis (Raw JSON)</li>
-                                    <li style="margin-bottom:10px;">✅ <strong>Noise Filtering</strong> (Interpolasi Linear)</li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div class="code-block" style="margin-top: 20px; width: 100%;">
-                            > Initiating Protocol...<br>
-                            > Fetching ARKO, KEEN, POWR... [OK]<br>
-                            > Detecting Outliers... [OK]
-                        </div>
-                    </div>
-                </div>
+            <div>
+              <div style="font-size: 0.85rem; color: var(--text-muted)">
+                ANALYST
+              </div>
+              <div style="font-weight: 700; font-size: 1rem">Fahmi Idris</div>
+              <div
+                style="
+                  font-family: 'JetBrains Mono';
+                  color: var(--text-secondary);
+                  font-size: 0.9rem;
+                "
+              >
+                105223033
+              </div>
             </div>
-
-            <div class="slide">
-                <h2>2.0 Mathematical Framework</h2>
-                <p>Analisis ini didasarkan pada dua pilar statistik yang kokoh (Referensi: Kaggle Best Practices).</p>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 20px;">
-                    <div style="background: rgba(0,0,0,0.2); padding: 25px; border: 1px solid var(--grid-line);">
-                        <h3>A. Normalized Returns</h3>
-                        <p>Kami tidak menggunakan harga mentah (<em>P<sub>t</sub></em>) karena tidak stasioner. Kami menggunakan <strong>Logarithmic Returns</strong> untuk menormalkan distribusi data:</p>
-                        <div style="text-align: center; margin: 20px 0;">
-                            <span class="formula">R<sub>t</sub> = ln( P<sub>t</sub> / P<sub>t-1</sub> )</span>
-                        </div>
-                        <p style="font-size: 0.9rem;">*Ini memungkinkan perbandingan adil antara saham harga Rp 2.000 (SLIS) dan Rp 700 (POWR).</p>
-                    </div>
-
-                    <div style="background: rgba(0,0,0,0.2); padding: 25px; border: 1px solid var(--grid-line);">
-                        <h3>B. Anomaly Detection (Z-Score)</h3>
-                        <p>Kami mendefinisikan "Anomali" sebagai kejadian dengan probabilitas < 1%. Menggunakan asumsi distribusi normal pada rolling window 20 hari:</p>
-                        <div style="text-align: center; margin: 20px 0;">
-                            <span class="formula">Z = (x - &mu;) / &sigma;</span>
-                        </div>
-                        <p style="font-size: 0.9rem;">
-                            <strong>Threshold:</strong> Jika <span class="text-alert">|Z| > 2.5</span>, maka sinyal bahaya (Burst) aktif.
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="slide">
-                <h2>3.0 Data Forensics (EDA)</h2>
-                <p>Visualisasi Distribusi Risiko melalui Boxplot. Semakin panjang "kumis" (whiskers), semakin tidak stabil saham tersebut.</p>
-
-                <div class="graph-wrapper" style="height: 450px;">
-                    <img src="boxplot_gabungan.png" onclick="openLB(this, 'Distribusi Log Return: ARKO & SLIS memiliki varians terbesar')" onerror="this.style.display='none';">
-                    <div style="display: none;" class="code-block">⚠️ ERROR: BOXPLOT IMAGE NOT FOUND</div>
-                </div>
-
-                <div class="stat-grid">
-                    <div class="stat-card">
-                        <div class="stat-val text-alert">High</div>
-                        <div class="stat-label">Kurtosis (ARKO)</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-val text-safe">Low</div>
-                        <div class="stat-label">Kurtosis (POWR)</div>
-                    </div>
-                    <div class="stat-card" style="grid-column: span 2;">
-                        <div class="code-block" style="width:100%; font-size: 0.8rem;">
-                            INSIGHT:<br>
-                            Ekor distribusi yang panjang (Fat Tails) pada SLIS & ARKO mengindikasikan risiko kejadian ekstrem jauh lebih tinggi dari prediksi model normal.
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="slide">
-                <h2>4.0 Analisis Siklus (Frequency Domain)</h2>
-                <p>Apakah pergerakan harga digerakkan oleh algoritma bandar (pola teratur) atau sentimen acak? <strong>FFT (Fast Fourier Transform)</strong> memberikan jawabannya.</p>
-
-                <div class="multi-grid">
-                    <div class="mini-card" onclick="openLB(this.querySelector('img'), 'ARKO FFT: No dominant peak')">
-                        <img src="fft_ARKO.png" onerror="this.src='https://via.placeholder.com/300x200?text=ARKO+FFT'">
-                        <div class="mini-label">ARKO</div>
-                    </div>
-                    <div class="mini-card" onclick="openLB(this.querySelector('img'), 'KEEN FFT: No dominant peak')">
-                        <img src="fft_KEEN.png" onerror="this.src='https://via.placeholder.com/300x200?text=KEEN+FFT'">
-                        <div class="mini-label">KEEN</div>
-                    </div>
-                    <div class="mini-card" onclick="openLB(this.querySelector('img'), 'OASA FFT: No dominant peak')">
-                        <img src="fft_OASA.png" onerror="this.src='https://via.placeholder.com/300x200?text=OASA+FFT'">
-                        <div class="mini-label">OASA</div>
-                    </div>
-                    <div class="mini-card" onclick="openLB(this.querySelector('img'), 'POWR FFT: No dominant peak')">
-                        <img src="fft_POWR.png" onerror="this.src='https://via.placeholder.com/300x200?text=POWR+FFT'">
-                        <div class="mini-label">POWR</div>
-                    </div>
-                    <div class="mini-card" onclick="openLB(this.querySelector('img'), 'SLIS FFT: No dominant peak')">
-                        <img src="fft_SLIS.png" onerror="this.src='https://via.placeholder.com/300x200?text=SLIS+FFT'">
-                        <div class="mini-label">SLIS</div>
-                    </div>
-                </div>
-
-                <div style="margin-top: 20px; border-left: 4px solid var(--neon-cyan); padding-left: 20px;">
-                    <h3>Interpretasi Fisika Pasar:</h3>
-                    <p>Grafik spektrum yang datar (tanpa <em>spike</em> tinggi) mengonfirmasi hipotesis <strong>Random Walk</strong>. Artinya, harga EBT saat ini murni didorong oleh sentimen berita eksternal (Exogenous Shocks), bukan siklus internal yang bisa di-timing dengan kalender.</p>
-                </div>
-            </div>
-
-            <div class="slide">
-                <h2>5.0 Deteksi Data Burst (Outlier)</h2>
-                <p>Peta visual kejadian pasar luar biasa (Z-Score > 2.5). Titik merah adalah momen di mana "Kepanikan" atau "Euforia" terjadi.</p>
-
-                <div class="multi-grid">
-                    <div class="mini-card" onclick="openLB(this.querySelector('img'), 'ARKO Anomaly')">
-                        <img src="anomali_ARKO.png" onerror="this.src='https://via.placeholder.com/300x200?text=ARKO+Burst'">
-                        <div class="mini-label">ARKO</div>
-                    </div>
-                    <div class="mini-card" onclick="openLB(this.querySelector('img'), 'KEEN Anomaly')">
-                        <img src="anomali_KEEN.png" onerror="this.src='https://via.placeholder.com/300x200?text=KEEN+Burst'">
-                        <div class="mini-label">KEEN</div>
-                    </div>
-                    <div class="mini-card" onclick="openLB(this.querySelector('img'), 'OASA Anomaly')">
-                        <img src="anomali_OASA.png" onerror="this.src='https://via.placeholder.com/300x200?text=OASA+Burst'">
-                        <div class="mini-label">OASA</div>
-                    </div>
-                    <div class="mini-card" onclick="openLB(this.querySelector('img'), 'POWR Anomaly')">
-                        <img src="anomali_POWR.png" onerror="this.src='https://via.placeholder.com/300x200?text=POWR+Burst'">
-                        <div class="mini-label">POWR</div>
-                    </div>
-                    <div class="mini-card" onclick="openLB(this.querySelector('img'), 'SLIS Anomaly')">
-                        <img src="anomali_SLIS.png" onerror="this.src='https://via.placeholder.com/300x200?text=SLIS+Burst'">
-                        <div class="mini-label">SLIS</div>
-                    </div>
-                </div>
-
-                <div style="background: rgba(255, 56, 96, 0.1); border: 1px solid var(--alert-red); padding: 15px; margin-top: 20px; border-radius: 5px;">
-                    <strong>Event Correlation (Studi Kasus SLIS):</strong>
-                    Lonjakan anomali beruntun pada Q2-2023 berkorelasi kuat dengan rilis berita Subsidi Motor Listrik Rp 7 Juta. Ini adalah bukti <em>Contextual Outlier</em> yang valid.
-                </div>
-            </div>
-
-            <div class="slide">
-                <h2>6.0 Kesimpulan & Matrix Strategi</h2>
-                
-                <div style="display: flex; gap: 40px; align-items: flex-start;">
-                    <div style="flex: 1; text-align: center;">
-                        <img src="barchart_risiko.png" onclick="openLB(this, 'Total Count Anomaly')" style="width: 100%; border-radius: 8px; border: 1px solid var(--grid-line);" onerror="this.src='https://via.placeholder.com/400x300?text=Bar+Chart+Risiko'">
-                        <p style="font-size: 0.8rem; margin-top: 10px;">Fig 6.1: Kuantifikasi Risiko Absolut</p>
-                    </div>
-                    
-                    <div style="flex: 1;">
-                        <h3>Rekomendasi Berbasis Data:</h3>
-                        <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-family: 'Inter';">
-                            <tr style="border-bottom: 1px solid var(--grid-line);">
-                                <th style="text-align: left; padding: 10px; color: var(--neon-cyan);">PROFILE</th>
-                                <th style="text-align: left; padding: 10px; color: var(--neon-cyan);">EMITEN</th>
-                                <th style="text-align: left; padding: 10px; color: var(--neon-cyan);">STRATEGI</th>
-                            </tr>
-                            <tr style="background: rgba(69, 162, 158, 0.2);">
-                                <td style="padding: 15px; font-weight: bold;">DEFENSIVE</td>
-                                <td>POWR (19 Anomali)</td>
-                                <td>Buy & Hold. Volatilitas rendah cocok untuk dividen play.</td>
-                            </tr>
-                            <tr style="background: rgba(255, 56, 96, 0.2);">
-                                <td style="padding: 15px; font-weight: bold;">AGGRESSIVE</td>
-                                <td>ARKO / SLIS (>30)</td>
-                                <td>Swing Trade. Manfaatkan <em>Data Burst</em> untuk profit jangka pendek.</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 15px; font-weight: bold;">SPECULATIVE</td>
-                                <td>OASA</td>
-                                <td>Wait & See. Anomali akibat pivot bisnis masih terlalu tinggi (Noise).</td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="slide">
-                <div style="text-align: center;">
-                    <h1>TERIMA KASIH :)</h1>
-                </div>
-            </div>
-
+          </div>
         </div>
 
-        <footer>
-            <div class="nav-btn" onclick="move(-1)">PREV MODULE</div>
-            <div id="slide-num" style="align-self: center; color: var(--text-main);">01 / 08</div>
-            <div class="nav-btn" onclick="move(1)">NEXT MODULE</div>
-        </footer>
+        <div class="slide">
+          <h2>Executive Summary</h2>
+          <div class="split-layout">
+            <div class="split-half">
+              <h3 style="color: var(--accent-red); font-size: 1.5rem">
+                The Problem
+              </h3>
+              <p>
+                Investor ritel sering terjebak dalam euforia "Green Energy".
+                Mereka tidak melihat risiko volatilitas harian (*intraday risk*)
+                yang tidak tercatat dalam laporan keuangan tahunan.
+              </p>
+
+              <h3
+                style="
+                  color: var(--accent-blue);
+                  font-size: 1.5rem;
+                  margin-top: 20px;
+                "
+              >
+                The Solution
+              </h3>
+              <p>
+                Kami membangun <strong>Pipeline Audit Data Otomatis</strong>.
+                Tujuannya bukan memprediksi harga, tapi mendeteksi
+                <em>ketidakwajaran</em> (Anomali) secara statistik.
+              </p>
+            </div>
+            <div
+              class="split-half"
+              style="
+                background: #fafafa;
+                padding: 40px;
+                border-radius: 12px;
+                border: 1px solid #eee;
+              "
+            >
+              <h3>Research Parameters</h3>
+              <ul style="list-style: none; font-size: 1.1rem; line-height: 2.2">
+                <li>
+                  📅 <strong>Periode:</strong> 01 Juli 2022 s.d 01 Januari 2026
+                </li>
+                <li>
+                  💾 <strong>Data:</strong> Raw Transaction JSON (IDX Network)
+                </li>
+                <li>
+                  ⚙️ <strong>Metode:</strong> Z-Score (Outlier) & FFT (Siklus)
+                </li>
+                <li>
+                  🎯 <strong>Target:</strong> 5 Emiten Sektor EBT (Lihat Slide
+                  Berikutnya)
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="slide">
+          <h2>Data Profile: The Renewable 5</h2>
+          <p>
+            Kami memilih 5 perusahaan (Mid-Cap) yang merepresentasikan spektrum
+            industri EBT di Indonesia.
+          </p>
+
+          <div class="grid-emiten">
+            <div class="emiten-card">
+              <div class="ticker">ARKO</div>
+              <div class="company-name">Arkora Hydro Tbk</div>
+              <div class="sector-badge">Hydro Power</div>
+            </div>
+            <div class="emiten-card">
+              <div class="ticker">KEEN</div>
+              <div class="company-name">Kencana Energi Lestari</div>
+              <div class="sector-badge">Hydro & Biomass</div>
+            </div>
+            <div class="emiten-card">
+              <div class="ticker">POWR</div>
+              <div class="company-name">Cikarang Listrindo</div>
+              <div class="sector-badge">Gas & Solar PV</div>
+            </div>
+            <div class="emiten-card">
+              <div class="ticker">SLIS</div>
+              <div class="company-name">Gaya Abadi Sempurna</div>
+              <div class="sector-badge">EV Manufacturer</div>
+            </div>
+            <div class="emiten-card">
+              <div class="ticker">OASA</div>
+              <div class="company-name">Maharaksa Biru Energi</div>
+              <div class="sector-badge">Waste-to-Energy</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="slide">
+          <h2>The Data Science Arsenal</h2>
+          <p>
+            Metode teknis yang digunakan untuk mengekstrak <em>insight</em> dari
+            data mentah:
+          </p>
+          <div class="grid-cards" style="margin-top: 20px">
+            <div class="info-card">
+              <strong>1. Preprocessing</strong>
+              <span
+                >Menggunakan <em>Linear Interpolation</em> untuk mengisi data
+                hari libur agar sinyal waktu kontinu.</span
+              >
+            </div>
+            <div class="info-card">
+              <strong>2. Feature Extraction</strong>
+              <span
+                >Mengubah harga mentah menjadi <em>Log Returns</em> &
+                <em>Rolling Volatility</em> agar data stasioner.</span
+              >
+            </div>
+            <div class="info-card">
+              <strong>3. EDA (Exploratory)</strong>
+              <span
+                >Menggunakan Boxplot untuk mendeteksi <em>Kurtosis</em> (Fat
+                Tails) atau risiko ekstrem.</span
+              >
+            </div>
+            <div class="info-card">
+              <strong>4. Feature Augmentation</strong>
+              <span
+                >Menambah fitur baru: <em>Z-Score</em> untuk memberi label
+                "Bahaya" pada data.</span
+              >
+            </div>
+            <div class="info-card">
+              <strong>5. FFT (Modeling)</strong>
+              <span
+                >Fast Fourier Transform untuk membedakan Pola Siklus vs Gerakan
+                Acak (Random Walk).</span
+              >
+            </div>
+            <div class="info-card">
+              <strong>6. Thresholding</strong>
+              <span
+                >Batas Z-Score > 2.5 sebagai Anomali (Probabilitas kejadian <
+                1%).</span
+              >
+            </div>
+          </div>
+        </div>
+
+        <div class="slide">
+          <h2>Mathematical Framework</h2>
+          <div class="split-layout">
+            <div
+              class="split-half"
+              style="
+                background: #fafafa;
+                padding: 30px;
+                border-radius: 12px;
+                text-align: center;
+              "
+            >
+              <h3 style="text-align: center">A. Normalized Returns</h3>
+              <div class="formula-box">
+                R<sub>t</sub> = ln( P<sub>t</sub> / P<sub>t-1</sub> )
+              </div>
+              <p style="font-size: 1rem; text-align: left">
+                Kami menggunakan <strong>Log Return</strong> karena sifatnya
+                <em>Time-Additive</em> dan membuat distribusi data mendekati
+                normal, sehingga valid untuk uji statistik Z-Score.
+              </p>
+            </div>
+            <div
+              class="split-half"
+              style="
+                background: #fafafa;
+                padding: 30px;
+                border-radius: 12px;
+                text-align: center;
+              "
+            >
+              <h3 style="text-align: center">B. Z-Score Anomaly</h3>
+              <div class="formula-box">Z = (x - &mu;) / &sigma;</div>
+              <p style="font-size: 1rem; text-align: left">
+                Kami mendefinisikan "Anomali" sebagai harga yang menyimpang >
+                2.5 kali lipat dari volatilitas normalnya (&sigma;) dalam
+                periode 20 hari.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="slide">
+          <h2>Data Forensics (EDA)</h2>
+          <div class="split-layout">
+            <div
+              class="split-half"
+              style="
+                border: 1px solid #eee;
+                padding: 20px;
+                border-radius: 12px;
+                height: 450px;
+                justify-content: center;
+                align-items: center;
+              "
+            >
+              <img
+                src="boxplot_gabungan.png"
+                onclick="openLB(this, 'Boxplot Distribusi Risiko')"
+                style="max-width: 100%; max-height: 100%; cursor: zoom-in"
+                alt="Boxplot"
+              />
+            </div>
+            <div class="split-half">
+              <h3>Analisis Distribusi Risiko</h3>
+              <p>
+                Boxplot menunjukkan seberapa "liar" pergerakan harian emiten.
+                Semakin panjang kumis, semakin tinggi risiko.
+              </p>
+
+              <div
+                style="
+                  margin-top: 15px;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 15px;
+                "
+              >
+                <div
+                  class="info-card"
+                  style="
+                    border-left: 5px solid var(--accent-red);
+                    padding: 20px;
+                  "
+                >
+                  <strong>ARKO & SLIS (High Risk)</strong>
+                  <span
+                    >Memiliki "Fat Tails" (ekor panjang). Sering terjadi
+                    lonjakan harga ekstrem (>5%) dalam sehari. Karakteristik
+                    saham spekulatif.</span
+                  >
+                </div>
+                <div
+                  class="info-card"
+                  style="
+                    border-left: 5px solid var(--accent-green);
+                    padding: 20px;
+                  "
+                >
+                  <strong>POWR (Low Risk)</strong>
+                  <span
+                    >Kotak pendek dan kumis pendek. Harga stabil, jarang memberi
+                    kejutan. Cocok untuk investor konservatif.</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="slide">
+          <h2>Analisis Siklus (FFT)</h2>
+          <div class="carousel-container">
+            <div class="carousel-track" id="track-fft">
+              <div class="carousel-item">
+                <div class="c-split">
+                  <div class="c-img"><img src="fft_ARKO.png" /></div>
+                  <div class="c-text">
+                    <h3>ARKO: Analisis Spektral</h3>
+                    <p><strong>Hasil:</strong> Grafik Datar (Noisy).</p>
+                    <p>
+                      Tidak ada puncak frekuensi dominan. Volatilitas ARKO
+                      bersifat <em>stochastic</em> (acak) dan reaktif terhadap
+                      berita, tanpa pola musiman yang bisa ditebak.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="carousel-item">
+                <div class="c-split">
+                  <div class="c-img"><img src="fft_KEEN_final.png" /></div>
+                  <div class="c-text">
+                    <h3>KEEN: Analisis Spektral</h3>
+                    <p><strong>Hasil:</strong> Flat Spectrum.</p>
+                    <p>
+                      Sinyal frekuensi rendah sangat lemah. Likuiditas KEEN yang
+                      fluktuatif tidak membentuk pola siklus algoritmik
+                      tertentu.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="carousel-item">
+                <div class="c-split">
+                  <div class="c-img"><img src="fft_OASA.png" /></div>
+                  <div class="c-text">
+                    <h3>OASA: Analisis Spektral</h3>
+                    <p><strong>Hasil:</strong> Noise Tinggi.</p>
+                    <p>
+                      Grafik berantakan (jagged). Wajar karena OASA sedang fase
+                      pivot bisnis, harga didorong spekulasi jangka pendek bukan
+                      fundamental siklikal.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="carousel-item">
+                <div class="c-split">
+                  <div class="c-img"><img src="fft_POWR.png" /></div>
+                  <div class="c-text">
+                    <h3>POWR: Analisis Spektral</h3>
+                    <p><strong>Hasil:</strong> Paling Stabil.</p>
+                    <p>
+                      Amplitudo sinyal sangat rendah dibanding ARKO. Konsisten
+                      dengan profilnya sebagai saham defensif.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="carousel-item">
+                <div class="c-split">
+                  <div class="c-img"><img src="fft_SLIS.png" /></div>
+                  <div class="c-text">
+                    <h3>SLIS: Analisis Spektral</h3>
+                    <p><strong>Hasil:</strong> Random Walk Murni.</p>
+                    <p>
+                      Tidak ada pola mingguan/bulanan. Harga sepenuhnya didikte
+                      oleh sentimen eksternal (kebijakan subsidi EV). Analisis
+                      teknikal waktu tidak efektif.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="c-nav">
+              <div class="c-btn" onclick="moveCarousel('track-fft', -1)">
+                &#8249;
+              </div>
+              <div class="c-btn" onclick="moveCarousel('track-fft', 1)">
+                &#8250;
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="slide">
+          <h2>Deteksi Data Burst (Anomali)</h2>
+          <div class="carousel-container">
+            <div class="carousel-track" id="track-anom">
+              <div class="carousel-item">
+                <div class="c-split">
+                  <div class="c-img"><img src="anomali_ARKO.png" /></div>
+                  <div class="c-text">
+                    <h3>ARKO: Forensik Anomali</h3>
+                    <p style="color: var(--accent-red); font-weight: 700">
+                      HIGH FREQUENCY BURST
+                    </p>
+                    <p>
+                      Titik merah tersebar merata. ARKO sangat sensitif. Berita
+                      kecil tentang proyek Mini Hydro atau debit air memicu
+                      reaksi pasar berlebihan (Overreaction).
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="carousel-item">
+                <div class="c-split">
+                  <div class="c-img"><img src="anomali_KEEN.png" /></div>
+                  <div class="c-text">
+                    <h3>KEEN: Forensik Anomali</h3>
+                    <p style="font-weight: 700">LIQUIDITY SPIKES</p>
+                    <p>
+                      Anomali sering terjadi karena volume transaksi tiba-tiba
+                      melonjak di pasar sepi. Indikasi transaksi blok atau
+                      perpindahan tangan institusi.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="carousel-item">
+                <div class="c-split">
+                  <div class="c-img"><img src="anomali_OASA.png" /></div>
+                  <div class="c-text">
+                    <h3>OASA: Forensik Anomali</h3>
+                    <p style="font-weight: 700">CLUSTER BURST</p>
+                    <p>
+                      Titik merah bergerombol di periode tertentu. Berkorelasi
+                      dengan pengumuman RUPS pivot bisnis ke Energi Hijau.
+                      Contoh <em>Collective Outlier</em>.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="carousel-item">
+                <div class="c-split">
+                  <div class="c-img"><img src="anomali_POWR.png" /></div>
+                  <div class="c-text">
+                    <h3>POWR: Forensik Anomali</h3>
+                    <p style="color: var(--accent-green); font-weight: 700">
+                      STABLE / CLEAN
+                    </p>
+                    <p>
+                      Sangat sedikit titik merah. Anomali hanya saat Dividen
+                      (Ex-Date drop) atau IHSG crash. Profil saham Blue Chip.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="carousel-item">
+                <div class="c-split">
+                  <div class="c-img"><img src="anomali_SLIS.png" /></div>
+                  <div class="c-text">
+                    <h3>SLIS: Forensik Anomali</h3>
+                    <p style="color: var(--accent-red); font-weight: 700">
+                      CONTEXTUAL OUTLIER
+                    </p>
+                    <p>
+                      Lonjakan titik merah masif di pertengahan 2023 bertepatan
+                      dengan
+                      <strong>Rilis Subsidi Motor Listrik Rp 7 Juta</strong>.
+                      Pasar merespons kebijakan publik secara instan.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="c-nav">
+              <div class="c-btn" onclick="moveCarousel('track-anom', -1)">
+                &#8249;
+              </div>
+              <div class="c-btn" onclick="moveCarousel('track-anom', 1)">
+                &#8250;
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="slide">
+          <h2>Kesimpulan & Strategi</h2>
+          <div class="split-layout">
+            <div
+              class="split-half"
+              style="
+                border: 1px solid #eee;
+                padding: 20px;
+                border-radius: 12px;
+                height: 450px;
+                align-items: center;
+                justify-content: center;
+              "
+            >
+              <img
+                src="barchart_risiko.png"
+                onclick="openLB(this, 'Total Count Anomaly')"
+                style="max-width: 100%; max-height: 100%; cursor: zoom-in"
+                alt="Bar Chart"
+              />
+            </div>
+            <div class="split-half">
+              <h3>Rekomendasi Berbasis Data</h3>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  gap: 20px;
+                  width: 100%;
+                "
+              >
+                <div
+                  class="info-card"
+                  style="
+                    border-left: 6px solid var(--accent-green);
+                    padding: 20px;
+                  "
+                >
+                  <strong>DEFENSIVE (POWR)</strong>
+                  <span style="font-size: 1rem"
+                    >Anomali Terendah (~19). Strategi:
+                    <strong>Buy & Hold</strong> / Dividen. Tahan banting.</span
+                  >
+                </div>
+
+                <div
+                  class="info-card"
+                  style="
+                    border-left: 6px solid var(--accent-red);
+                    padding: 20px;
+                  "
+                >
+                  <strong>AGGRESSIVE (ARKO, SLIS)</strong>
+                  <span style="font-size: 1rem"
+                    >Anomali Tertinggi (>30). Risiko capital loss tinggi.
+                    Strategi: <strong>Swing Trading</strong> jangka
+                    pendek.</span
+                  >
+                </div>
+
+                <div
+                  class="info-card"
+                  style="
+                    border-left: 6px solid var(--accent-blue);
+                    padding: 20px;
+                  "
+                >
+                  <strong>SPECULATIVE (OASA, KEEN)</strong>
+                  <span style="font-size: 1rem"
+                    >Anomali Variatif. Didorong aksi korporasi. Strategi:
+                    <strong>Wait & See</strong> sampai fundamental stabil.</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="slide">
+          <h1>Terima Kasih</h1>
+          <p>Open for Discussion & Q&A</p>
+        </div>
+      </div>
+
+      <footer>
+        <button class="nav-btn" onclick="changeGlobalSlide(-1)">
+          ↑ Previous
+        </button>
+        <div
+          style="
+            font-family: 'JetBrains Mono';
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            font-weight: 600;
+          "
+          id="slide-indicator"
+        >
+          MODULE 1 / 10
+        </div>
+        <button class="nav-btn" onclick="changeGlobalSlide(1)">Next ↓</button>
+      </footer>
     </div>
 
     <script>
-        let curr = 0;
-        const slides = document.querySelectorAll('.slide');
-        const countDisplay = document.getElementById('slide-num');
+      /* --- LOGIC: SCROLL, KEYBOARD & SLIDER --- */
+      let currentSlide = 0;
+      const slides = document.querySelectorAll(".slide");
+      const indicator = document.getElementById("slide-indicator");
+      let isThrottled = false;
 
-        function update() {
-            slides.forEach((s, i) => {
-                s.classList.remove('active');
-                if (i === curr) s.classList.add('active');
-            });
-            countDisplay.innerText = `0${curr + 1} / 0${slides.length}`;
-        }
-
-        function move(dir) {
-            curr += dir;
-            if (curr < 0) curr = 0;
-            if (curr >= slides.length) curr = slides.length - 1;
-            update();
-        }
-
-        function openLB(img, cap) {
-            document.getElementById('lb-img').src = img.src;
-            document.getElementById('lb-cap').innerText = cap;
-            document.getElementById('lightbox').classList.add('active');
-        }
-
-        document.addEventListener('keydown', e => {
-            if (e.key === 'ArrowRight') move(1);
-            if (e.key === 'ArrowLeft') move(-1);
-            if (e.key === 'Escape') document.getElementById('lightbox').classList.remove('active');
+      function updateSlide() {
+        slides.forEach((s, i) => {
+          s.classList.remove("active");
+          if (i === currentSlide) s.classList.add("active");
         });
+        indicator.innerText = `MODULE ${currentSlide + 1} / ${slides.length}`;
+      }
+
+      function changeGlobalSlide(n) {
+        currentSlide += n;
+        if (currentSlide < 0) currentSlide = 0;
+        if (currentSlide >= slides.length) currentSlide = slides.length - 1;
+        updateSlide();
+      }
+
+      /* --- INPUT HANDLERS --- */
+
+      // 1. Mouse Scroll (Throttled)
+      window.addEventListener("wheel", (e) => {
+        if (isThrottled) return;
+        if (e.deltaY > 0) changeGlobalSlide(1); // Scroll Down -> Next
+        else changeGlobalSlide(-1); // Scroll Up -> Prev
+
+        isThrottled = true;
+        setTimeout(() => (isThrottled = false), 1000); // 1s Cooldown
+      });
+
+      // 2. Keyboard Control
+      document.addEventListener("keydown", (e) => {
+        // Global: Up/Down
+        if (e.key === "ArrowDown") changeGlobalSlide(1);
+        if (e.key === "ArrowUp") changeGlobalSlide(-1);
+
+        // Carousel: Left/Right (Only if slide has carousel)
+        const activeSlide = slides[currentSlide];
+        const carousel = activeSlide.querySelector(".carousel-track");
+        if (carousel) {
+          if (e.key === "ArrowRight") moveCarousel(carousel.id, 1);
+          if (e.key === "ArrowLeft") moveCarousel(carousel.id, -1);
+        }
+
+        // Lightbox
+        if (e.key === "Escape")
+          document.getElementById("lightbox").classList.remove("active");
+      });
+
+      /* --- CAROUSEL LOGIC --- */
+      const carousels = {
+        "track-fft": { index: 0, count: 5 },
+        "track-anom": { index: 0, count: 5 },
+      };
+
+      function moveCarousel(trackId, direction) {
+        const track = document.getElementById(trackId);
+        const state = carousels[trackId];
+        state.index += direction;
+        if (state.index < 0) state.index = state.count - 1;
+        if (state.index >= state.count) state.index = 0;
+        track.style.transform = `translateX(-${state.index * 100}%)`;
+      }
+
+      /* --- LIGHTBOX --- */
+      function openLB(img, text) {
+        document.getElementById("lb-img").src = img.src;
+        document.getElementById("lb-cap").innerText = text;
+        document.getElementById("lightbox").classList.add("active");
+      }
+
+      updateSlide();
     </script>
-</body>
+  </body>
 </html>
